@@ -1,0 +1,48 @@
+.calendar__select {
+  box-shadow: 0 1px 8px 0 rgba(0, 44, 92, 0.28);
+  border-radius: 4px;
+  left: -24px;
+  padding: 16px;
+  font-size: 15px;
+}
+.calendar__select .selected {
+  background: #007dff !important;
+  color: white;
+}
+.calendar__select .cell,
+.calendar__select > header > span {
+  border-radius: 2px;
+}
+.calendar__select > header > .prev::after,
+.calendar__select > header > .next::after {
+  content: none !important;
+}
+.calendar__select > header > .up:hover {
+  background: #e9ecef !important;
+}
+.calendar__select > header > .prev {
+  background: url(/assets/arrow.svg) no-repeat center;
+  transform: rotate(180deg);
+}
+.calendar__select > header > .prev:hover {
+  background: url(/assets/arrow.svg) no-repeat center #e9ecef !important;
+}
+.calendar__select > header > .next {
+  background: url(/assets/arrow.svg) no-repeat center;
+}
+.calendar__select > header > .next:hover {
+  background: url(/assets/arrow.svg) no-repeat center #e9ecef !important;
+}
+.calendar__select .cell:hover {
+  background-color: #e9ecef !important;
+  border: 1px solid #e9ecef !important;
+  color: black;
+}
+
+@media (max-width: 800px) {
+  .calendar__select {
+    width: 100% !important;
+    left: 0;
+    margin-left: 0;
+  }
+}
