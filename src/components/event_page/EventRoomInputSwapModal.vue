@@ -78,12 +78,12 @@ export default {
   },
   methods: {
     ok() {
-      this.$store.commit('eventEditSwap', null);
+      this.$store.commit('setShowSwaps', false);
     },
   },
   computed: {
     show() {
-      return (this.swaps || []).length;
+      return this.$store.getters.getShowSwaps && this.swaps.length;
     },
     swaps() {
       return this.$store.getters.getEventEditSwap;

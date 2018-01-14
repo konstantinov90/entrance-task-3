@@ -30,6 +30,7 @@ const createStore = () =>
       tooltipEventId: null,
       highlightedRoomId: null,
       swaps: null,
+      showSwaps: false,
     },
     mutations: {
       incrementDate(state, inc) {
@@ -70,6 +71,9 @@ const createStore = () =>
       eventEditSwap(state, swaps) {
         Vue.set(state, 'swaps', swaps);
       },
+      setShowSwaps(state, value) {
+        Vue.set(state, 'showSwaps', value);
+      },
       toggleModalWindowFlag(state, value) {
         Vue.set(state, 'modalWindowFlag', value);
       },
@@ -91,6 +95,9 @@ const createStore = () =>
     },
     actions: {},
     getters: {
+      getShowSwaps(state) {
+        return state.showSwaps;
+      },
       getEventEditSwap(state) {
         return state.swaps;
       },

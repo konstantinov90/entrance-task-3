@@ -146,6 +146,7 @@ export default {
   },
   created() {
     this.$store.commit('eventEditDates', this);
+    this.$store.commit('eventEditRecommendedDates', this);
   },
 };
 </script>

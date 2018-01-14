@@ -46,6 +46,7 @@ export default {
       this.$store.commit('eventEditRoom', this.recommendation.roomId);
       this.$store.commit('eventEditRecommendedDates', this.recommendation);
       this.$store.commit('eventEditSwap', this.recommendation.swaps);
+      this.$store.commit('setShowSwaps', true);
     },
     deselect() {
       this.$store.commit('eventEditRoom', null);

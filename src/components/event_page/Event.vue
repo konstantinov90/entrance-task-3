@@ -85,6 +85,7 @@ export default {
       update({ event }) {
         if (event) {
           this.$store.commit('eventEdit', event);
+          this.$store.commit('eventEditRecommendedDates', event);
         } else {
           this.$store.commit('eventEditTitle');
           this.$store.commit('eventEditClearUsers');
@@ -121,7 +122,10 @@ export default {
     },
     createEvent() {
       if (this.isReady) {
-        this.createEventAtDB()
+        Promise.all([
+          this.createEventAtDB(),
+          ...this.$store.getters.getEventEditSwap.map(s => this.changeEventRoom(s.eventId, s.roomId)),
+        ])
           .then(() => {
             this.$store.commit('toggleModalWindowFlag', 'created');
             this.$router.push({ name: '/' });
@@ -190,7 +194,7 @@ export default {
         })
       );
     },
-    changeEventRoom() {
+    changeEventRoom(id, roomId) {
       return this.$apollo.mutate({
         mutation: gql`
           mutation changeEventRoom($id: ID!, $roomId: ID!) {
@@ -200,14 +204,20 @@ export default {
           }
         `,
         variables: {
-          id: this.event.id,
-          roomId: this.$store.getters.getEventEditRoomId,
+          id,
+          roomId,
         },
       });
     },
     updateEvent() {
       if (this.isReady) {
-        Promise.all([this.updateEventAtDB(), this.addUserToEvent(), this.removeUserFromEvent(), this.changeEventRoom()])
+        Promise.all([
+          this.updateEventAtDB(),
+          this.addUserToEvent(),
+          this.removeUserFromEvent(),
+          this.changeEventRoom(this.event.id, this.$store.getters.getEventEditRoomId),
+          ...this.$store.getters.getEventEditSwap.map(s => this.changeEventRoom(s.eventId, s.roomId)),
+        ])
           .then(() => {
             this.$store.commit('toggleModalWindowFlag', 'updated');
             this.$router.push({ name: '/' });
