@@ -29,6 +29,7 @@ const createStore = () =>
       tooltipBaseCoord: null,
       tooltipEventId: null,
       highlightedRoomId: null,
+      swaps: null,
     },
     mutations: {
       incrementDate(state, inc) {
@@ -47,8 +48,15 @@ const createStore = () =>
         Vue.set(state.eventEditData, 'dateStart', dateStart);
         Vue.set(state.eventEditData, 'dateEnd', dateEnd);
       },
+      eventEditRecommendedDates(state, { dateStart, dateEnd }) {
+        Vue.set(state.eventEditData, 'recommendedDateStart', dateStart);
+        Vue.set(state.eventEditData, 'recommendedDateEnd', dateEnd);
+      },
       eventEditRoom(state, roomId) {
         Vue.set(state.eventEditData, 'room', { id: roomId });
+      },
+      eventEditClearUsers(state) {
+        Vue.set(state.eventEditData, 'users', []);
       },
       eventEditAddUser(state, user) {
         const users = [...(state.eventEditData.users || [])];
@@ -58,6 +66,9 @@ const createStore = () =>
       eventEditRemoveUser(state, userId) {
         const users = [...state.eventEditData.users];
         Vue.set(state.eventEditData, 'users', users.filter(u => u.id !== userId));
+      },
+      eventEditSwap(state, swaps) {
+        Vue.set(state, 'swaps', swaps);
       },
       toggleModalWindowFlag(state, value) {
         Vue.set(state, 'modalWindowFlag', value);
@@ -80,6 +91,9 @@ const createStore = () =>
     },
     actions: {},
     getters: {
+      getEventEditSwap(state) {
+        return state.swaps;
+      },
       getModalWindowFlag(state) {
         return state.modalWindowFlag;
       },
@@ -109,6 +123,12 @@ const createStore = () =>
       },
       getEventEditDateEnd(state) {
         return state.eventEditData.dateEnd;
+      },
+      getEventEditRecommendedDateStart(state) {
+        return state.eventEditData.recommendedDateStart;
+      },
+      getEventEditRecommendedDateEnd(state) {
+        return state.eventEditData.recommendedDateEnd;
       },
       getEventEditSelectedUsers(state) {
         if (state.eventEditData.users) {

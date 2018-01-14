@@ -1,25 +1,19 @@
 <template>
   <div class="event_room_input">
     <p class="font-bold">{{ selectedRoomId? "Ваша переговорка": "Рекомендованные переговорки" }}</p>
-    <div v-for="room in rooms || []" :key="room.id"
-      class="event_room_input__room"
-      :class="{event_room_input__room_selected: selectedRoomId}"
-      @click="selectRoom(room)"
-      v-if="!selectedRoomId || selectedRoomId===room.id"
-    >
-      <div class="event_room_input__room__label font-normal">
-        <span class="font-bold" style="margin-right: 12px">{{ selectedTime }}</span> {{ room.title }} · {{ room.floor }} этаж
-      </div>
-      <div class="event_room_input__room__close" @click.stop="deselectRoom" v-if="selectedRoomId">+</div>
-    </div>
+    <event-room-input-room v-for="recommendation in recommendations" :key="recommendation.roomId" :recommendation="recommendation">
+    </event-room-input-room>
     <div class="event_room_input__reminder font-bold" v-if="!selectedRoomId">Выберите переговорку</div>
+    <event-room-input-swap-modal></event-room-input-swap-modal>
   </div>
 </template>
 
 <script>
 import { format } from 'date-fns';
 import gql from 'graphql-tag';
-import { rooms } from '../../store/mock_data.js';
+import EventRoomInputRoom from './EventRoomInputRoom.vue';
+import EventRoomInputSwapModal from './EventRoomInputSwapModal.vue';
+// import { rooms } from '../../store/mock_data.js';
 
 export default {
   name: 'event-room-input',
@@ -28,44 +22,59 @@ export default {
   //     rooms,
   //   };
   // },
+  components: {
+    EventRoomInputRoom,
+    EventRoomInputSwapModal,
+  },
+  props: {
+    event: {
+      type: Object,
+    },
+  },
   apollo: {
-    rooms: gql`
-      {
-        rooms {
-          id
-          title
-          capacity
-          floor
+    recommendations: {
+      query: gql`
+        query recommendations($dateStart: Date!, $dateEnd: Date!, $userIds: [ID], $selectedEventId: ID) {
+          recommendations(
+            dateStart: $dateStart
+            dateEnd: $dateEnd
+            userIds: $userIds
+            selectedEventId: $selectedEventId
+          ) {
+            roomId
+            dateStart
+            dateEnd
+            swaps {
+              eventId
+              roomId
+            }
+          }
         }
-      }
-    `,
+      `,
+      variables() {
+        return {
+          dateStart: this.$store.getters.getEventEditDateStart || new Date(1970, 0, 0),
+          dateEnd: this.$store.getters.getEventEditDateEnd || new Date(1970, 0, 0),
+          userIds: this.$store.getters.getEventEditSelectedUsers,
+          selectedEventId: this.$route.query.id,
+        };
+      },
+    },
   },
   computed: {
     selectedRoomId() {
       return this.$store.getters.getEventEditRoomId;
     },
-    selectedTime() {
-      const dateStart = this.$store.getters.getEventEditDateStart;
-      const dateEnd = this.$store.getters.getEventEditDateEnd;
-      if (dateStart && dateEnd) return `${format(dateStart, 'HH:mm')}—${format(dateEnd, 'HH:mm')}`;
-      return '';
+    thisEvent() {
+      return { ...this.event, roomId: this.event ? this.event.room.id : '' };
     },
   },
   created() {
-    if (this.$route.query.roomId) {
-      this.selectRoom({ id: this.$route.query.roomId });
-    }
-  },
-  methods: {
-    selectRoom({ id }) {
-      this.$store.commit('eventEditRoom', id);
-    },
-    deselectRoom() {
-      this.$store.commit('eventEditRoom', null);
-    },
+    if (!this.$route.query.id) this.$store.commit('eventEditRoom', this.$route.query.roomId);
   },
 };
 </script>
+
 <style>
 .event_room_input {
   width: 100%;

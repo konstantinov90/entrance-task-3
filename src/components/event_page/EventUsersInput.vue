@@ -1,11 +1,13 @@
 <template>
 <div class="event_users_input">
   <p class="font-bold">Участники</p>
-  <input type="text" class="font-normal" v-model="usersQuery" placeholder="Например, Тор Одинович"
-    @focus="toggleShowUserList" @blur="toggleShowUserList">
-  <div class="event_users_input__user_list" v-if="showUserList">
-    <div v-for="user in usersFiltered" :key="user.id" class="event_users_input__user_list__item font-normal"
-      @mousedown="selectUser(user)">
+  <input type="text" class="font-normal event_users_input__input"
+    v-model="usersQuery" :placeholder="placeholder"
+    @focus="toggleShowUserList" @blur="toggleShowUserList" @keydown="onKeyDown">
+  <div class="event_users_input__user_list" ref="event_users_input__user_list" v-if="showUserList && !disabled">
+    <div v-for="(user, index) in usersFiltered" :key="user.id"
+      class="event_users_input__user_list__item font-normal" :class="highlightedClass(index)"
+      @mousedown="selectUser" @mouseover="highlightUser(index)">
       <img :src="user.avatarUrl" :alt="user.login" height="24px">
       <span>{{user.login}} <font color="#A3A2A4">· {{user.homeFloor}} этаж</font></span>
       </div>
@@ -31,10 +33,26 @@ export default {
     return {
       showUserList: false,
       usersQuery: '',
+      highlightedUserIdx: 0,
       // users,
     };
   },
   apollo: {
+    room: {
+      query: gql`
+        query room($id: ID!) {
+          room(id: $id) {
+            id
+            capacity
+          }
+        }
+      `,
+      variables() {
+        return {
+          id: this.$store.getters.getEventEditRoomId || '',
+        };
+      },
+    },
     users: gql`
       {
         users {
@@ -47,6 +65,17 @@ export default {
     `,
   },
   computed: {
+    placeholder() {
+      return this.disabled ? 'Ёмкость комнаты исчерпана' : 'Например, Тор Одинович';
+    },
+    disabledClass() {
+      return {
+        event_users_input__input_disabled: this.disabled,
+      };
+    },
+    disabled() {
+      return this.selectedUsers.length >= (this.room || {}).capacity;
+    },
     selectedUsers() {
       return (this.users || []).filter(u => this.$store.getters.getEventEditSelectedUsers.includes(u.id));
     },
@@ -60,16 +89,42 @@ export default {
         event_users_input__arrow: this.showUserList && !this.usersQuery,
       };
     },
+    highlightedClass() {
+      return idx => {
+        return {
+          event_users_input__user_list__item_highlighted: this.highlightedUserIdx === idx,
+        };
+      };
+    },
   },
   methods: {
+    onKeyDown({ code }) {
+      const lst = this.$refs.event_users_input__user_list;
+      switch (code) {
+        case 'ArrowDown':
+          this.highlightedUserIdx = Math.min(this.highlightedUserIdx + 1, this.usersFiltered.length - 1);
+          lst.scrollTop = Math.min(lst.scrollTop + 34, lst.scrollHeight);
+          break;
+        case 'ArrowUp':
+          this.highlightedUserIdx = Math.max(this.highlightedUserIdx - 1, 0);
+          lst.scrollTop = Math.max(lst.scrollTop - 33, 0);
+          break;
+        case 'Enter':
+          this.selectUser();
+          break;
+      }
+    },
+    highlightUser(idx) {
+      this.highlightedUserIdx = idx;
+    },
     clear() {
       this.usersQuery = '';
     },
     removeUser({ id }) {
       this.$store.commit('eventEditRemoveUser', id);
     },
-    selectUser(user) {
-      this.$store.commit('eventEditAddUser', user);
+    selectUser() {
+      this.$store.commit('eventEditAddUser', this.usersFiltered[this.highlightedUserIdx]);
     },
     toggleShowUserList() {
       this.showUserList = !this.showUserList;
@@ -85,7 +140,7 @@ export default {
   margin-bottom: 24px;
   position: relative;
 }
-.event_users_input > input {
+.event_users_input__input {
   font-size: 13px;
   letter-spacing: 0.47px;
   box-sizing: border-box;
@@ -95,8 +150,8 @@ export default {
   border: 2px solid #e9ecef;
   padding: 0 10px;
 }
-.event_users_input > input:hover,
-.event_users_input > input:focus {
+.event_users_input__input:hover,
+.event_users_input__input:focus {
   border: 2px solid #007dff;
 }
 .event_users_input > p {
@@ -118,11 +173,11 @@ export default {
   padding: 5px 16px;
   font-size: 13px;
   line-height: 20px;
+  cursor: pointer;
 }
-.event_users_input__user_list__item:hover {
+.event_users_input__user_list__item_highlighted {
   font-weight: bold;
   background: #f6f7f9;
-  cursor: pointer;
 }
 .event_users_input__user_list__item img {
   border-radius: 100%;

@@ -16,7 +16,7 @@
       <div class="event__body_horizontal_flex">
         <event-users-input></event-users-input>
         <p style="min-width: 32px"></p>
-        <event-room-input></event-room-input>
+        <event-room-input :event="event"></event-room-input>
       </div>
     </div>
     <div class="event__footer__delete event__footer__delete_additional font-medium" v-if="id" @click="confirmDelete">Удалить встречу</div>
@@ -30,7 +30,7 @@
     <div class="event__footer__button event__footer__save" :class="eventSaveBtnClass" v-if="id" @mousedown="updateEvent">Сохранить</div>
   </div>
 </div>
-<event-delete-modal v-if="showEventDeleteModal"></event-delete-modal>
+<event-delete-modal :deleteFcn="removeEvent" v-if="showEventDeleteModal"></event-delete-modal>
 </div>
 </template>
 
@@ -83,7 +83,12 @@ export default {
         };
       },
       update({ event }) {
-        this.$store.commit('eventEdit', event);
+        if (event) {
+          this.$store.commit('eventEdit', event);
+        } else {
+          this.$store.commit('eventEditTitle');
+          this.$store.commit('eventEditClearUsers');
+        }
         return event;
       },
     },
@@ -93,7 +98,7 @@ export default {
   // },
   methods: {
     createEventAtDB() {
-      const { dateStart, dateEnd, title, room, users } = this.$store.getters.getEventEditData;
+      const { recommendedDateStart, recommendedDateEnd, title, room, users } = this.$store.getters.getEventEditData;
 
       return this.$apollo.mutate({
         mutation: gql`
@@ -105,8 +110,8 @@ export default {
         `,
         variables: {
           input: {
-            dateStart,
-            dateEnd,
+            dateEnd: recommendedDateEnd,
+            dateStart: recommendedDateStart,
             title,
           },
           roomId: room.id,
@@ -125,7 +130,7 @@ export default {
       }
     },
     updateEventAtDB() {
-      const { dateStart, dateEnd, title } = this.$store.getters.getEventEditData;
+      const { recommendedDateStart, recommendedDateEnd, title } = this.$store.getters.getEventEditData;
 
       return this.$apollo.mutate({
         mutation: gql`
@@ -138,8 +143,8 @@ export default {
         variables: {
           id: this.event.id,
           input: {
-            dateEnd,
-            dateStart,
+            dateEnd: recommendedDateEnd,
+            dateStart: recommendedDateStart,
             title,
           },
         },
@@ -185,15 +190,52 @@ export default {
         })
       );
     },
-    updateEvent(e) {
+    changeEventRoom() {
+      return this.$apollo.mutate({
+        mutation: gql`
+          mutation changeEventRoom($id: ID!, $roomId: ID!) {
+            changeEventRoom(id: $id, roomId: $roomId) {
+              id
+            }
+          }
+        `,
+        variables: {
+          id: this.event.id,
+          roomId: this.$store.getters.getEventEditRoomId,
+        },
+      });
+    },
+    updateEvent() {
       if (this.isReady) {
-        Promise.all([this.updateEventAtDB(), this.addUserToEvent(), this.removeUserFromEvent()])
+        Promise.all([this.updateEventAtDB(), this.addUserToEvent(), this.removeUserFromEvent(), this.changeEventRoom()])
           .then(() => {
             this.$store.commit('toggleModalWindowFlag', 'updated');
             this.$router.push({ name: '/' });
           })
           .catch(error => console.error(error));
       }
+    },
+    removeEventAtDB() {
+      return this.$apollo.mutate({
+        mutation: gql`
+          mutation removeEvent($id: ID!) {
+            removeEvent(id: $id) {
+              id
+            }
+          }
+        `,
+        variables: {
+          id: this.event.id,
+        },
+      });
+    },
+    removeEvent() {
+      this.removeEventAtDB()
+        .then(() => {
+          this.$store.commit('toggleModalWindowFlag', 'removed');
+          this.$router.push({ name: '/' });
+        })
+        .catch(error => console.error(error));
     },
     confirmDelete() {
       this.$store.commit('toggleEventDeleteConfirm');
@@ -218,8 +260,8 @@ export default {
       const gtrs = this.$store.getters;
       return (
         gtrs.getEventEditTitle &&
-        gtrs.getEventEditDateStart &&
-        gtrs.getEventEditDateEnd &&
+        gtrs.getEventEditRecommendedDateStart &&
+        gtrs.getEventEditRecommendedDateEnd &&
         gtrs.getEventEditRoomId &&
         gtrs.getEventEditSelectedUsers.length
       );

@@ -22,6 +22,7 @@
 </template>
 
 <script>
+import gql from 'graphql-tag';
 import Datepicker from 'vuejs-datepicker';
 import ru from 'date-fns/locale/ru';
 import {
@@ -49,6 +50,31 @@ export default {
       warnings: [],
     };
   },
+  apollo: {
+    event: {
+      query: gql`
+        query event($id: ID!) {
+          event(id: $id) {
+            id
+            dateStart
+            dateEnd
+          }
+        }
+      `,
+      variables() {
+        return {
+          id: this.$route.query.id || '',
+        };
+      },
+      update({ event }) {
+        if (event) {
+          this.startHour = this.getTimeFmt(event.dateStart);
+          this.endHour = this.getTimeFmt(event.dateEnd);
+        }
+        return event;
+      },
+    },
+  },
   methods: {
     formatter(date) {
       return format(date, `DD MMMM[,] YYYY`, { locale: ru });
@@ -71,18 +97,14 @@ export default {
       return format(date, 'HH[:]mm');
     },
     startTime() {
-      return (
-        this.$store.getters.getEventEditDateStart ||
-        this.parseQueryDate(this.$route.query.dateStart) ||
-        startOfHour(addHours(new Date(), 1))
-      );
+      if (this.$route.query.dateStart) return this.parseQueryDate(this.$route.query.dateStart);
+      if (!this.$route.query.id) return startOfHour(addHours(new Date(), 1));
+      return this.$store.getters.getEventEditDateStart;
     },
     endTime() {
-      return (
-        this.$store.getters.getEventEditDateEnd ||
-        this.parseQueryDate(this.$route.query.dateEnd) ||
-        startOfHour(addHours(new Date(), 2))
-      );
+      if (this.$route.query.dateEnd) return this.parseQueryDate(this.$route.query.dateEnd);
+      if (!this.$route.query.id) return startOfHour(addHours(new Date(), 2));
+      return this.$store.getters.getEventEditDateEnd;
     },
     initialDate() {
       return startOfDay(this.$store.getters.getEventEditDateStart || this.$store.getters.getDate);
@@ -96,6 +118,7 @@ export default {
     },
     commitData() {
       this.$store.commit('eventEditDates', this);
+      this.$store.commit('eventEditRoom', null);
     },
   },
   computed: {
@@ -122,7 +145,7 @@ export default {
     },
   },
   created() {
-    this.commitData();
+    this.$store.commit('eventEditDates', this);
   },
 };
 </script>

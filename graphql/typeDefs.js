@@ -42,6 +42,18 @@ input EventInput {
     dateEnd: Date!
 }
 
+type RoomSwap {
+    eventId: ID!
+    roomId: ID!
+}
+
+type Recommendation {
+    dateStart: Date!
+    dateEnd: Date!
+    roomId: ID!
+    swaps: [RoomSwap]
+}
+
 type Query {
   user(id: ID!): User
   users: [User]
@@ -49,7 +61,8 @@ type Query {
   events: [Event]
   room(id: ID!): Room
   rooms: [Room]
-  eventsByRoomAndDate(roomId: ID!, date: Date!): [Event]
+  eventsByRoomAndDate(roomId: ID!, date: Date!): [Event],
+  recommendations(dateStart: Date!, dateEnd: Date!, userIds: [ID], selectedEventId: ID): [Recommendation]
 }
 
 type Mutation {

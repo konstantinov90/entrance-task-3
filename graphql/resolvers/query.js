@@ -1,6 +1,7 @@
-const Op = require('sequelize').Op;
-const addDays = require('date-fns').addDays;
+const { Op } = require('sequelize');
+const { addDays, startOfDay } = require('date-fns');
 const { models } = require('../../models');
+const { getRecommendationWithDataTransform } = require('../../utils');
 
 module.exports = {
   event(root, { id }) {
@@ -32,6 +33,35 @@ module.exports = {
           [Op.lt]: addDays(date, 1),
         },
       },
+    });
+  },
+  recommendations(root, { dateStart, dateEnd, userIds, selectedEventId }) {
+    const date = startOfDay(dateStart);
+    return Promise.all([
+      models.Event.findAll({
+        include: ['Room', 'Users'],
+        where: {
+          dateStart: {
+            [Op.gt]: date,
+          },
+          dateEnd: {
+            [Op.lt]: addDays(date, 1),
+          },
+          id: {
+            [Op.ne]: selectedEventId || -1,
+          },
+        },
+      }),
+      models.Room.findAll({}),
+      models.User.findAll({
+        where: {
+          id: {
+            [Op.or]: userIds.concat([-1]),
+          },
+        },
+      }),
+    ]).then(([events, rooms, users]) => {
+      return getRecommendationWithDataTransform(dateStart, dateEnd, users, events, rooms);
     });
   },
 };

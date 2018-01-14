@@ -4,7 +4,7 @@
     <p class="event_delete_modal__paragraph font-bold">Встреча будет удалена безвозвратно</p>
     <div class="event_delete_modal__btns">
       <div class="event_delete_modal__btn font-medium" @click="cancel">Отмена</div>
-      <div class="event_delete_modal__btn font-medium">Удалить</div>
+      <div class="event_delete_modal__btn font-medium" @click="commitDelete">Удалить</div>
     </div>
   </modal-window>
 </template>
@@ -14,10 +14,20 @@ import ModalWindow from '../common/ModalWindow.vue';
 
 export default {
   name: 'event-delete-modal',
+  props: {
+    deleteFcn: {
+      type: Function,
+      required: true,
+    },
+  },
   components: {
     ModalWindow,
   },
   methods: {
+    commitDelete() {
+      this.deleteFcn();
+      this.cancel();
+    },
     cancel() {
       this.$store.commit('toggleEventDeleteConfirm');
     },

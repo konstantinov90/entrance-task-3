@@ -33,7 +33,7 @@ export default {
       `,
       variables() {
         return {
-          id: this.event.room ? this.event.room.id : '',
+          id: this.event.room ? this.event.room.id || '' : '',
         };
       },
     },
@@ -50,6 +50,8 @@ export default {
           return 'Встреча создана!';
         case 'updated':
           return 'Встреча обновлена!';
+        case 'removed':
+          return 'Встреча удалена!';
       }
     },
     modalWindowFlag() {
