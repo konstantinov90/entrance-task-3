@@ -53,15 +53,10 @@ module.exports = {
         },
       }),
       models.Room.findAll({}),
-      models.User.findAll({
-        where: {
-          id: {
-            [Op.or]: userIds.concat([-1]),
-          },
-        },
-      }),
-    ]).then(([events, rooms, users]) => {
-      return getRecommendationWithDataTransform(dateStart, dateEnd, users, events, rooms);
+      models.User.findAll({}),
+    ]).then(([events, rooms, allUsers]) => {
+      const users = allUsers.filter(u => userIds.includes(u.id));
+      return getRecommendationWithDataTransform(dateStart, dateEnd, users, events, rooms, allUsers);
     });
   },
 };

@@ -37,7 +37,7 @@ function getFreeRooms(date, members, { events, rooms: _rooms }) {
   return { overlappingEvents, freeRooms };
 }
 
-function getRecommendationWithDataTransform(dateStart, dateEnd, users, events, rooms) {
+function getRecommendationWithDataTransform(dateStart, dateEnd, users, events, rooms, allUsers) {
   // приведем данные к виду, который заявлен в описании интерфейса
   // на случай если в Яндексе заготовили тесты для этой функции
   const recommendations = getRecommendation(
@@ -64,6 +64,13 @@ function getRecommendationWithDataTransform(dateStart, dateEnd, users, events, r
       rooms: rooms.map(({ id, title, capacity, floor }) => {
         return { id, title, capacity, floor };
       }),
+      persons: allUsers.map(({ login, avatarUrl: avatar, homeFloor: floor }) => {
+        return {
+          login,
+          avatar,
+          floor,
+        };
+      }),
     }
   );
   return recommendations.map(({ date, room, swap }) => {
@@ -81,7 +88,7 @@ function getRecommendationWithDataTransform(dateStart, dateEnd, users, events, r
   });
 }
 
-function getRecommendation(date, members, { events, rooms }) {
+function getRecommendation(date, members, { events, rooms, persons }) {
   const { overlappingEvents, freeRooms } = getFreeRooms(date, members, { events, rooms });
   // если нашлись свободные комнаты
   if (freeRooms.length)
@@ -93,6 +100,8 @@ function getRecommendation(date, members, { events, rooms }) {
     return r1.totalCriterion - r2.totalCriterion;
   }
 
+  // hashMap всех участников по логинам
+  const personsFloorMap = new Map(persons.map(p => [p.login, p]));
   // иначе попробуем освободить комнаты
   const recomendations = rooms
     .map(room => {
@@ -101,12 +110,15 @@ function getRecommendation(date, members, { events, rooms }) {
       // для каждого из пересекающихся событий из энной комнаты
       // найдем свободную комнату-кандидата на перенос, первую по критерию
       const possibleSwaps = overlappingEvents.filter(e => e.room === room.id).map(e => {
-        const { freeRooms } = getFreeRooms(e.date, e.members, { events, rooms: rooms.filter(r => r.id !== e.room) });
+        // восстановим массив участников встречи
+        const eventMembers = e.members.map(login => personsFloorMap.get(login));
+
+        const { freeRooms } = getFreeRooms(e.date, eventMembers, { events, rooms: rooms.filter(r => r.id !== e.room) });
         if (freeRooms.length)
           return {
             event: e.id,
             room: freeRooms[0].id,
-            criterion: getSortCriterion(freeRooms[0].floor, e.members),
+            criterion: getSortCriterion(freeRooms[0].floor, eventMembers),
           };
       });
       // если вариант переноса нашелся для всех событий - сформируем рекомендацию
