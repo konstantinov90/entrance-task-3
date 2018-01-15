@@ -16,7 +16,7 @@
     "build": "webpack",
     "dew": "webpack-dev-server --hot --open",
     "dev_client": "nodemon rebuild.js --watch src -e js,vue",
-    "dev": "concurrently --kill-others \"npm run dev_server\" \"npm run dev_client\""
+    "dev": "set NODE_ENV=development && concurrently --kill-others \"npm run dev_server\" \"npm run dev_client\""
   },
   "dependencies": {
     "apollo-cache-inmemory": "^1.1.5",

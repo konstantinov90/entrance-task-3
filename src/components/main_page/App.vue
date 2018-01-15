@@ -69,7 +69,7 @@ export default {
   },
   methods: {
     onScroll(e) {
-      this.isScrolled = e.target.scrollLeft != 0;
+      this.isScrolled = e.target.scrollLeft > 0;
     },
     firstOfFloor({ id, floor }) {
       return this.orderedRooms.filter(o => o.floor === floor)[0].id === id;

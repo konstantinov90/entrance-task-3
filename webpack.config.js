@@ -40,7 +40,7 @@ module.exports = {
     new webpack.DefinePlugin({
       PROD_MODE: JSON.stringify((process.env.NODE_ENV || '').trim()),
     }),
-  ].concat(process.env.NODE_ENV ? new UglifyJSPlugin() : []),
+  ].concat(process.env.NODE_ENV !== 'development' ? new UglifyJSPlugin() : []),
   resolve: {
     alias: {
       vue$: 'vue/dist/vue.esm.js', // 'vue/dist/vue.common.js' for webpack 1

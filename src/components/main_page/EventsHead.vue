@@ -3,9 +3,9 @@
   <div class="events_head__clock_face">
     <div class="events_head__clock_hand font-bold" :style="clockStyle">{{ stringTime }}</div>
   </div>
-  <div class="events_head__hour font-bold" v-for="(hour, index) in hourSlots" :key="index" :style="{ flex: hour.duration }">
-      <span :style="{'margin-left': index > 9? '-7px': '-3px'}">{{ index }}</span>
-      <span v-if="index === hourSlots.length - 1" style="margin-right: -6px">24</span>
+  <div class="events_head__hour font-bold" v-for="hour in hourSlots" :key="hour" style="width: 4.1667%; flex-basis: 4.1667%, max-width: 4.1667%">
+      <span :style="{'margin-left': hour > 9? '-7px': '-3px'}">{{ hour }}</span>
+      <span v-if="hour === hourSlots.length - 1" style="margin-right: -6px">24</span>
   </div>
 </div>
 </template>
@@ -22,9 +22,11 @@ export default {
       interval: null,
     };
   },
+  methods: {},
   computed: {
     hourSlots() {
-      return this.$store.getters.getMakeSlots(this.$store.getters.getDate);
+      return Array.apply(null, Array(24)).map((x, i) => i);
+      // return this.$store.getters.getMakeSlots(this.$store.getters.getDate);
     },
     hours() {
       return getHours(this.time);
@@ -76,7 +78,7 @@ export default {
   display: flex;
   justify-content: space-between;
 }
-.events_head__hour::before {
+.events_head__hour::after {
   content: '';
   position: absolute;
   top: 31px;
