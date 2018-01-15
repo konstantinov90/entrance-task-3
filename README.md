@@ -2,6 +2,7 @@
 Сборка проекта проводилась под windows (используется `rebuild.bat`)
 ```
 npm i
+npm run reset-db
 npm run dev
 ```
 
