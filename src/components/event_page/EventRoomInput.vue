@@ -1,7 +1,7 @@
 <template>
   <div class="event_room_input">
     <p class="font-bold">{{ selectedRoomId? "Ваша переговорка": "Рекомендованные переговорки" }}</p>
-    <event-room-input-room v-for="recommendation in recommendations" :key="recommendation.roomId" :recommendation="recommendation">
+    <event-room-input-room v-for="recommendation in freshRecommendations" :key="recommendation.roomId" :recommendation="recommendation">
     </event-room-input-room>
     <div class="event_room_input__reminder font-bold" v-if="!selectedRoomId">Выберите переговорку</div>
     <event-room-input-swap-modal></event-room-input-swap-modal>
@@ -67,6 +67,10 @@ export default {
     },
     thisEvent() {
       return { ...this.event, roomId: this.event ? this.event.room.id : '' };
+    },
+    freshRecommendations() {
+      this.$apollo.queries.recommendations.refetch();
+      return this.recommendations;
     },
   },
   created() {
