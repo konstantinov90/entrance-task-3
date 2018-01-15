@@ -98,7 +98,7 @@ export default {
  
 <style>
 .app {
-  overflow: hidden;
+  overflow-x: hidden;
   position: relative;
 }
 .events {

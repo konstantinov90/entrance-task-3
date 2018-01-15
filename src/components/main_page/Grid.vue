@@ -49,7 +49,7 @@ export default {
           }
         }
       `,
-      pollInterval: 1000,
+      // pollInterval: 10000,
       variables() {
         return {
           date: this.date,
@@ -99,6 +99,9 @@ export default {
     //   });
     // },
   },
+  created() {
+    this.$apollo.queries.events.refetch();
+  },
   computed: {
     // events() {
     //   return this.filterEvents(events);
@@ -109,13 +112,15 @@ export default {
     items() {
       const slots = this.$store.getters.getMakeSlots(this.$store.getters.getDate, this.room.id);
       if (!this.events) return slots;
-      const result = slots.concat(this.events).sort(function(a, b) {
-        return compareAsc(a.dateStart, b.dateStart);
-      });
+      const result = slots.concat(this.events).sort((a, b) => compareAsc(a.dateStart, b.dateStart));
+
       let slot, event;
       for (let obj of [...result]) {
         if (obj.type === 'slot') slot = obj;
-        if (obj.type === 'event') event = obj;
+        if (obj.type === 'event') {
+          if (event && !compareAsc(obj.dateStart, event.dateEnd)) event.dateEnd = obj.dateEnd;
+          else event = { ...obj };
+        }
         if (!slot || !event) continue;
         if (this.isSlotWithinEvent(slot, event)) {
           Vue.set(slot, 'collapsed', true);
@@ -131,9 +136,12 @@ export default {
           Vue.set(slot, 'collapsed', true);
         }
       }
-      return result.filter(e => !e.collapsed).map(o => {
-        return { ...o };
-      });
+      return result
+        .filter(e => !e.collapsed)
+        .map(o => {
+          return { ...o };
+        })
+        .sort((a, b) => compareAsc(a.dateStart, b.dateStart));
     },
     gridClass() {
       return {

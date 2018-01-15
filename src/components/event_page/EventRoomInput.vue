@@ -75,6 +75,7 @@ export default {
   },
   created() {
     if (!this.$route.query.id) this.$store.commit('eventEditRoom', this.$route.query.roomId);
+    this.$store.commit('eventEditSwap', []);
   },
 };
 </script>
