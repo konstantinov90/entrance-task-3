@@ -1,4 +1,5 @@
 ## Запуск
+Сборка проекта проводилась под windows (используется `rebuild.bat`)
 ```
 npm i
 npm run dev
