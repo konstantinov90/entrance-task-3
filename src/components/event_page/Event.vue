@@ -124,7 +124,7 @@ export default {
       if (this.isReady) {
         Promise.all([
           this.createEventAtDB(),
-          ...this.$store.getters.getEventEditSwap.map(s => this.changeEventRoom(s.eventId, s.roomId)),
+          ...(this.$store.getters.getEventEditSwap || []).map(s => this.changeEventRoom(s.eventId, s.roomId)),
         ])
           .then(() => {
             this.$store.commit('toggleModalWindowFlag', 'created');
@@ -216,7 +216,7 @@ export default {
           this.addUserToEvent(),
           this.removeUserFromEvent(),
           this.changeEventRoom(this.event.id, this.$store.getters.getEventEditRoomId),
-          ...this.$store.getters.getEventEditSwap.map(s => this.changeEventRoom(s.eventId, s.roomId)),
+          ...(this.$store.getters.getEventEditSwap || []).map(s => this.changeEventRoom(s.eventId, s.roomId)),
         ])
           .then(() => {
             this.$store.commit('toggleModalWindowFlag', 'updated');

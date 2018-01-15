@@ -72,7 +72,7 @@ export default {
       this.isScrolled = e.target.scrollLeft != 0;
     },
     firstOfFloor({ id, floor }) {
-      return this.rooms.filter(o => o.floor === floor)[0].id === id;
+      return this.orderedRooms.filter(o => o.floor === floor)[0].id === id;
     },
     theVeryFirst({ id, floor }) {
       return this.orderedRooms[0].id === id;
@@ -99,6 +99,7 @@ export default {
 <style>
 .app {
   overflow: hidden;
+  position: relative;
 }
 .events {
   overflow-x: hidden;

@@ -44,6 +44,7 @@ const SwapParagraph = {
             id
             title
             room {
+              id
               title
               floor
             }

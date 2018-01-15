@@ -115,6 +115,8 @@ export default {
 }
 .room__title_highlighted {
   color: #0070e0;
+  overflow: unset !important;
+  text-overflow: unset !important;
 }
 .room__capacity {
   font-size: 13px;
