@@ -10,12 +10,12 @@
     <div style="display: flex; flex-basis: 168px;">
       <div class="event_datetime_input_partial">
         <p class="font-bold event_datetime_input__element_hide">Начало</p>
-        <input type="text" class="font-normal" :class="warnInputClass('start')" v-model="startHour" @input="onInput($event, 'start')">
+        <input type="text" class="font-normal" :class="warnInputClass('start')" :value="startHour" @input="onInputStartTime">
       </div>
       <p class="event_datetime_input__date_divider font-bold">—</p>
       <div class="event_datetime_input_partial">
         <p class="font-bold event_datetime_input__element_hide">Конец</p>
-        <input type="text" class="font-normal" :class="warnInputClass('end')" v-model="endHour" @input="onInput($event, 'end')">
+        <input type="text" class="font-normal" :class="warnInputClass('end')" :value="endHour"  @input="onInputEndTime">
       </div>
     </div>
   </div>  
@@ -35,7 +35,10 @@ import {
   getTime,
   getHours,
   getMinutes,
+  parse,
 } from 'date-fns';
+
+const HOUR_STR_PTRN = /^(\d{2}):(\d{2})$/;
 
 export default {
   name: 'event-datetime-input',
@@ -44,9 +47,12 @@ export default {
   },
   data() {
     return {
-      date: this.initialDate(),
-      startHour: this.getTimeFmt(this.startTime()),
-      endHour: this.getTimeFmt(this.endTime()),
+      // date: this.initialDate(),
+      // startHour: this.getTimeFmt(this.startTime()),
+      // endHour: this.getTimeFmt(this.endTime()),
+      fallBackDate: new Date(),
+      fallBackStartHour: '',
+      fallBackEndHour: '',
       warnings: [],
     };
   },
@@ -68,8 +74,8 @@ export default {
       },
       update({ event }) {
         if (event) {
-          this.startHour = this.getTimeFmt(event.dateStart);
-          this.endHour = this.getTimeFmt(event.dateEnd);
+          this.fallBackStartHour = this.fallBackStartHour || this.getTimeFmt(event.dateStart);
+          this.fallBackEndHour = this.fallBackEndHour || this.getTimeFmt(event.dateEnd);
         }
         return event;
       },
@@ -85,16 +91,30 @@ export default {
       if (!timestamp) return;
       return new Date(timestamp);
     },
-    parseTime(inputTime) {
-      const input = inputTime.split(':');
-      const hours = parseInt(input[0]);
-      if (isNaN(hours) || hours > 23 || hours < 0) return;
-      const minutes = parseInt(input[1]);
-      if (isNaN(minutes) || minutes > 59 || minutes < 0) return;
-      return addMinutes(addHours(this.date, hours), minutes);
-    },
+    // parseTime(inputTime) {
+    //   const input = inputTime.split(':');
+    //   const hours = parseInt(input[0]);
+    //   if (isNaN(hours) || hours > 23 || hours < 0) return;
+    //   const minutes = parseInt(input[1]);
+    //   if (isNaN(minutes) || minutes > 59 || minutes < 0) return;
+    //   return addMinutes(addHours(this.date, hours), minutes);
+    // },
     getTimeFmt(date) {
       return format(date, 'HH[:]mm');
+    },
+    parseDateTimeStrictly(date, hourStr) {
+      if (!HOUR_STR_PTRN.test(hourStr)) return;
+      const [hours, minutes] = hourStr
+        .match(HOUR_STR_PTRN)
+        .slice(1)
+        .map(v => parseInt(v));
+      if (isNaN(hours) || hours > 23 || hours < 0) return;
+      if (isNaN(minutes) || minutes > 59 || minutes < 0) return;
+      const dateStr = `${format(date, 'YYYY[-]MM[-]DD')}T${hours}:${minutes}`;
+      // const timestamp = new Date.parse(dateStr);
+      // console.log(hourStr, dateStr, timestamp);
+      // if (isNaN(timestamp)) return;
+      return new Date(dateStr);
     },
     startTime() {
       if (this.$route.query.dateStart) return this.parseQueryDate(this.$route.query.dateStart);
@@ -109,24 +129,51 @@ export default {
     initialDate() {
       return startOfDay(this.$store.getters.getEventEditDateStart || this.$store.getters.getDate);
     },
-    onChangeDate(newDate) {
-      this.date = newDate;
+    onChangeDate(date) {
+      this.clearData();
+      this.fallBackDate = date;
       this.commitData();
     },
-    onInput(e) {
-      this.commitData();
-    },
+    // onInput(e) {
+    //   this.commitData();
+    // },
     commitData() {
       this.$store.commit('eventEditDates', this);
+    },
+    clearData() {
+      this.$store.commit('eventEditDates', { dateStart: null, dateEnd: null });
       this.$store.commit('eventEditRoom', null);
+    },
+    onInputStartTime({ target }) {
+      this.clearData();
+      this.fallBackStartHour = target.value;
+      console.log('data cleared', this.startHour, this.$store.getters.getEventEditDateStart, this._dateStart);
+      this.commitData();
+      // const startDate = this.parseDateTimeStrictly(this.date, value);
+    },
+    onInputEndTime({ target }) {
+      this.clearData();
+      this.fallBackEndHour = target.value;
+      this.commitData();
     },
   },
   computed: {
+    date() {
+      return startOfDay(this.$store.getters.getEventEditDateStart || this.fallBackDate);
+    },
+    startHour() {
+      const date = this.$store.getters.getEventEditDateStart;
+      return date ? this.getTimeFmt(date) : this.fallBackStartHour;
+    },
+    endHour() {
+      const date = this.$store.getters.getEventEditDateEnd;
+      return date ? this.getTimeFmt(date) : this.fallBackEndHour;
+    },
     _dateStart() {
-      return this.parseTime(this.startHour);
+      return this.parseDateTimeStrictly(this.date, this.startHour);
     },
     _dateEnd() {
-      return this.parseTime(this.endHour);
+      return this.parseDateTimeStrictly(this.date, this.endHour);
     },
     dateStart() {
       if (!this._dateStart || compareAsc(this._dateStart, this._dateEnd) >= 0) return null;
