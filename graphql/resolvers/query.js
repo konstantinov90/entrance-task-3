@@ -55,7 +55,7 @@ module.exports = {
       models.Room.findAll({}),
       models.User.findAll({}),
     ]).then(([events, rooms, allUsers]) => {
-      const users = allUsers.filter(u => userIds.includes(u.id));
+      const users = allUsers.filter(u => userIds.includes(u.id.toString()));
       return getRecommendationWithDataTransform(dateStart, dateEnd, users, events, rooms, allUsers);
     });
   },
