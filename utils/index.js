@@ -55,7 +55,7 @@ function getRecommendationWithDataTransform(dateStart, dateEnd, users, events, r
           id,
           title,
           members: users.map(({ login, homeFloor: floor }) => {
-            return { login, floor };
+            return login;
           }),
           date: { start: getTime(start), end: getTime(end) },
           room: room.id,
@@ -101,7 +101,7 @@ function getRecommendation(date, members, { events, rooms, persons }) {
   }
 
   // hashMap всех участников по логинам
-  const personsFloorMap = new Map(persons.map(p => [p.login, p]));
+  const personsLoginMap = new Map(persons.map(p => [p.login, p]));
   // иначе попробуем освободить комнаты
   const recomendations = rooms
     .map(room => {
@@ -111,7 +111,7 @@ function getRecommendation(date, members, { events, rooms, persons }) {
       // найдем свободную комнату-кандидата на перенос, первую по критерию
       const possibleSwaps = overlappingEvents.filter(e => e.room === room.id).map(e => {
         // восстановим массив участников встречи
-        const eventMembers = e.members.map(login => personsFloorMap.get(login));
+        const eventMembers = e.members.map(login => personsLoginMap.get(login));
 
         const { freeRooms } = getFreeRooms(e.date, eventMembers, { events, rooms: rooms.filter(r => r.id !== e.room) });
         if (freeRooms.length)
