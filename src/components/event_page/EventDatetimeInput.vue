@@ -10,12 +10,12 @@
     <div style="display: flex; flex-basis: 168px;">
       <div class="event_datetime_input_partial">
         <p class="font-bold event_datetime_input__element_hide">Начало</p>
-        <input type="text" class="font-normal" :class="warnInputClass('start')" :value="startHour" @input="onInputStartTime">
+        <input type="text" class="font-normal" :class="warnInputClass" :value="startHour" @input="onInputStartTime">
       </div>
       <p class="event_datetime_input__date_divider font-bold">—</p>
       <div class="event_datetime_input_partial">
         <p class="font-bold event_datetime_input__element_hide">Конец</p>
-        <input type="text" class="font-normal" :class="warnInputClass('end')" :value="endHour"  @input="onInputEndTime">
+        <input type="text" class="font-normal" :class="warnInputClass" :value="endHour"  @input="onInputEndTime">
       </div>
     </div>
   </div>  
@@ -47,7 +47,7 @@ export default {
   },
   data() {
     return {
-      fallBackDate: new Date(),
+      fallBackDate: this.$store.getters.getDate,
       fallBackStartHour: '',
       fallBackEndHour: '',
       warnings: [],
@@ -73,12 +73,26 @@ export default {
         if (event) {
           this.fallBackStartHour = this.fallBackStartHour || this.getTimeFmt(event.dateStart);
           this.fallBackEndHour = this.fallBackEndHour || this.getTimeFmt(event.dateEnd);
+        } else {
+          this.fallBackStartHour =
+            this.fallBackStartHour ||
+            (this.$route.query.dateStart
+              ? this.getTimeFmt(parseInt(this.$route.query.dateStart))
+              : this.getTimeFmt(startOfHour(addHours(this.$store.getters.getDate, getHours(new Date()) + 1))));
+          this.fallBackEndHour =
+            this.fallBackEndHour ||
+            (this.$route.query.dateEnd
+              ? this.getTimeFmt(parseInt(this.$route.query.dateEnd))
+              : this.getTimeFmt(startOfHour(addHours(this.$store.getters.getDate, getHours(new Date()) + 2))));
         }
         return event;
       },
     },
   },
   methods: {
+    getFallbackTimeAlt(shift) {
+      return startOfHour(addHours(this.$store.getters.getDate, getHours(new Date()) + shift));
+    },
     formatter(date) {
       return format(date, `DD MMMM[,] YYYY`, { locale: ru });
     },
@@ -109,13 +123,16 @@ export default {
       this.$store.commit('eventEditRoom', null);
     },
     onInputStartTime({ target }) {
-      this.clearData();
       this.fallBackStartHour = target.value;
+      this.clearData();
       this.commitData();
+      // console.log(dateStart);
+      // this.$store.commit('eventEditDates', { dateStart });
     },
     onInputEndTime({ target }) {
-      this.clearData();
       this.fallBackEndHour = target.value;
+      this.clearData();
+      // this.$store.commit('eventEditDates', { dateEnd });
       this.commitData();
     },
   },
@@ -146,10 +163,8 @@ export default {
       return this._dateEnd;
     },
     warnInputClass() {
-      return type => {
-        return {
-          event_datetime_input_warn: (type === 'start' ? this.dateStart : this.dateEnd) ? false : true,
-        };
+      return {
+        event_datetime_input_warn: !this.dateStart || !this.dateEnd,
       };
     },
   },

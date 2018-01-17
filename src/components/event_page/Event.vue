@@ -38,7 +38,7 @@
 import AppHeader from '../common/AppHeader.vue';
 import Datepicker from 'vuejs-datepicker';
 import ru from 'date-fns/locale/ru';
-import { format, addHours, startOfHour } from 'date-fns';
+import { format, addHours, startOfHour, getHours } from 'date-fns';
 import gql from 'graphql-tag';
 import EventTopicInput from './EventTopicInput.vue';
 import EventDatetimeInput from './EventDatetimeInput.vue';
@@ -256,10 +256,16 @@ export default {
     //   return this.id ? events.filter(e => e.id === this.id)[0] : null;
     // },
     dateStart() {
-      return this.parseQueryDate(this.$route.query.dateStart) || startOfHour(addHours(new Date(), 1));
+      return (
+        this.parseQueryDate(this.$route.query.dateStart) ||
+        startOfHour(addHours(this.$store.getters.getDate, getHours(new Date()) + 1))
+      );
     },
     dateEnd() {
-      return this.parseQueryDate(this.$route.query.dateEnd) || startOfHour(addHours(new Date(), 2));
+      return (
+        this.parseQueryDate(this.$route.query.dateEnd) ||
+        startOfHour(addHours(this.$store.getters.getDate, getHours(new Date()) + 2))
+      );
     },
     room() {
       return {
