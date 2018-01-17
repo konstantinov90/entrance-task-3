@@ -34,7 +34,7 @@ export default {
   apollo: {
     recommendations: {
       query: gql`
-        query recommendations($dateStart: Date!, $dateEnd: Date!, $userIds: [ID], $selectedEventId: ID) {
+        query recommendations($dateStart: Date, $dateEnd: Date, $userIds: [ID], $selectedEventId: ID) {
           recommendations(
             dateStart: $dateStart
             dateEnd: $dateEnd
@@ -53,8 +53,8 @@ export default {
       `,
       variables() {
         return {
-          dateStart: this.$store.getters.getEventEditDateStart || new Date(1970, 0, 0),
-          dateEnd: this.$store.getters.getEventEditDateEnd || new Date(1970, 0, 0),
+          dateStart: this.$store.getters.getEventEditDateStart,
+          dateEnd: this.$store.getters.getEventEditDateEnd,
           userIds: this.$store.getters.getEventEditSelectedUsers,
           selectedEventId: this.$route.query.id,
         };

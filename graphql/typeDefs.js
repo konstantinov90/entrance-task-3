@@ -62,7 +62,7 @@ type Query {
   room(id: ID!): Room
   rooms: [Room]
   eventsByRoomAndDate(roomId: ID!, date: Date!): [Event],
-  recommendations(dateStart: Date!, dateEnd: Date!, userIds: [ID], selectedEventId: ID): [Recommendation]
+  recommendations(dateStart: Date, dateEnd: Date, userIds: [ID], selectedEventId: ID): [Recommendation]
 }
 
 type Mutation {

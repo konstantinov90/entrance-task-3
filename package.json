@@ -51,6 +51,8 @@
     "babel-preset-env": "^1.6.1",
     "concurrently": "^3.5.1",
     "css-loader": "^0.28.8",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
     "node-run-cmd": "^1.0.1",
     "nodemon": "^1.12.5",
     "semistandard": "^11.0.0",

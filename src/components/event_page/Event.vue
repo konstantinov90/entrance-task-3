@@ -38,7 +38,7 @@
 import AppHeader from '../common/AppHeader.vue';
 import Datepicker from 'vuejs-datepicker';
 import ru from 'date-fns/locale/ru';
-import { format, addHours, startOfHour } from 'date-fns';
+import { format, addHours, startOfHour, getHours } from 'date-fns';
 import gql from 'graphql-tag';
 import EventTopicInput from './EventTopicInput.vue';
 import EventDatetimeInput from './EventDatetimeInput.vue';
@@ -62,7 +62,7 @@ export default {
   apollo: {
     event: {
       query: gql`
-        query Event($id: ID!) {
+        query event($id: ID!) {
           event(id: $id) {
             id
             title
@@ -83,13 +83,7 @@ export default {
         };
       },
       update({ event }) {
-        if (event) {
-          this.$store.commit('eventEdit', event);
-          this.$store.commit('eventEditRecommendedDates', event);
-        } else {
-          this.$store.commit('eventEditTitle');
-          this.$store.commit('eventEditClearUsers');
-        }
+        this.$store.commit('eventEdit', event || { dateStart: this.dateStart, dateEnd: this.dateEnd, room: this.room });
         return event;
       },
     },
@@ -250,11 +244,34 @@ export default {
     confirmDelete() {
       this.$store.commit('toggleEventDeleteConfirm');
     },
+    parseQueryDate(queryDate) {
+      if (!queryDate) return;
+      const timestamp = parseInt(queryDate) || null;
+      if (!timestamp) return;
+      return new Date(timestamp);
+    },
   },
   computed: {
     // event() {
     //   return this.id ? events.filter(e => e.id === this.id)[0] : null;
     // },
+    dateStart() {
+      return (
+        this.parseQueryDate(this.$route.query.dateStart) ||
+        startOfHour(addHours(this.$store.getters.getDate, getHours(new Date()) + 1))
+      );
+    },
+    dateEnd() {
+      return (
+        this.parseQueryDate(this.$route.query.dateEnd) ||
+        startOfHour(addHours(this.$store.getters.getDate, getHours(new Date()) + 2))
+      );
+    },
+    room() {
+      return {
+        id: this.$route.query.roomId,
+      };
+    },
     showEventDeleteModal() {
       return this.$store.getters.getEventDeleteConfirm;
     },

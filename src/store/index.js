@@ -41,6 +41,8 @@ const createStore = () =>
       },
       eventEdit(state, event) {
         Vue.set(state, 'eventEditData', { ...(event || {}) });
+        Vue.set(state.eventEditData, 'recommendedDateStart', event.dateStart);
+        Vue.set(state.eventEditData, 'recommendedDateEnd', event.dateEnd);
       },
       eventEditTitle(state, title) {
         Vue.set(state.eventEditData, 'title', title);

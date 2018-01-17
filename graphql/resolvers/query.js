@@ -36,6 +36,7 @@ module.exports = {
     });
   },
   recommendations(root, { dateStart, dateEnd, userIds, selectedEventId }) {
+    if (!dateStart || !dateEnd) return [];
     const date = startOfDay(dateStart);
     return Promise.all([
       models.Event.findAll({
